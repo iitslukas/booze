@@ -17,16 +17,13 @@
             text-align: center;
         }
 
-        /* 🔍 DARK SEARCH BAR */
         #search {
             width: 100%;
             padding: 12px 14px;
             font-size: 16px;
             margin-bottom: 20px;
-
             background: #1e1e1e;
             color: white;
-
             border-radius: 8px;
             border: 1px solid #333;
             outline: none;
@@ -47,7 +44,7 @@
             gap: 20px;
         }
 
-        a.card {
+        .card {
             background: #1e1e1e;
             border-radius: 12px;
             overflow: hidden;
@@ -57,7 +54,7 @@
             display: block;
         }
 
-        a.card:hover {
+        .card:hover {
             transform: scale(1.03);
         }
 
@@ -88,39 +85,65 @@
 
 <input type="text" id="search" placeholder="Hľadaj cocktail (vodka, gin, rum...)">
 
-<div class="grid" id="cocktailGrid">
-    {% for drink in cocktails %}
-    <a href="/cocktail/{{ drink.id }}"
-       class="card"
-       data-name="{{ drink.name | lower }}">
-
-        <img src="{{ drink.image or 'https://via.placeholder.com/300x300?text=No+Image' }}">
-
-        <div class="card-content">
-            <h3>{{ drink.name }}</h3>
-            <div class="ingredients">
-                {% for ing in drink.ingredients %}
-                    {{ ing.name }}{% if not loop.last %}, {% endif %}
-                {% endfor %}
-            </div>
-        </div>
-
-    </a>
-    {% endfor %}
-</div>
+<div class="grid" id="cocktailGrid"></div>
 
 <script>
+    // 🔥 Tu si pridávaš svoje drinky
+    const cocktails = [
+        {
+            id: 1,
+            name: "Mojito",
+            image: "https://images.unsplash.com/photo-1582571352032-4486c04c09a0",
+            ingredients: ["Rum", "Lime", "Mint", "Sugar", "Soda"]
+        },
+        {
+            id: 2,
+            name: "Martini",
+            image: "https://images.unsplash.com/photo-1575023782549-62ca0d244b39",
+            ingredients: ["Gin", "Vermouth"]
+        },
+        {
+            id: 3,
+            name: "Whiskey Sour",
+            image: "https://images.unsplash.com/photo-1600891964092-4316c288032e",
+            ingredients: ["Whiskey", "Lemon", "Sugar"]
+        }
+    ];
+
+    const grid = document.getElementById("cocktailGrid");
     const search = document.getElementById("search");
-    const cards = document.querySelectorAll(".card");
+
+    function renderCocktails(list) {
+        grid.innerHTML = "";
+
+        list.forEach(drink => {
+            const card = document.createElement("div");
+            card.className = "card";
+            card.dataset.name = drink.name.toLowerCase();
+
+            card.innerHTML = `
+                <img src="${drink.image}" alt="${drink.name}">
+                <div class="card-content">
+                    <h3>${drink.name}</h3>
+                    <div class="ingredients">
+                        ${drink.ingredients.join(", ")}
+                    </div>
+                </div>
+            `;
+
+            grid.appendChild(card);
+        });
+    }
 
     search.addEventListener("keyup", () => {
         const value = search.value.toLowerCase();
-
-        cards.forEach(card => {
-            const name = card.dataset.name;
-            card.style.display = name.includes(value) ? "block" : "none";
-        });
+        const filtered = cocktails.filter(drink =>
+            drink.name.toLowerCase().includes(value)
+        );
+        renderCocktails(filtered);
     });
+
+    renderCocktails(cocktails);
 </script>
 
 </body>
