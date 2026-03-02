@@ -1,132 +1,118 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-    <meta charset="UTF-8">
-    <title>Detail Cocktailu</title>
-
-    <style>
-        body {
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: #121212;
-            color: white;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: auto;
-        }
-
-        .back-link {
-            display: inline-block;
-            margin-bottom: 20px;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            color: #ffb703;
-            text-decoration: none;
-            transition: color 0.2s, transform 0.2s;
-        }
-
-        .back-link:hover {
-            color: #ffd166;
-            transform: translateX(-4px);
-        }
-
-        img {
-            max-width: 400px;
-            width: 100%;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-
-        h2, h3 {
-            margin-top: 30px;
-        }
-
-        ul {
-            line-height: 1.8;
-            padding-left: 20px;
-        }
-
-        p {
-            line-height: 1.6;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booze Cocktails 🍸</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto;background:linear-gradient(135deg,#0f0f0f,#1b1b1b);color:white;padding:20px;}
+h1{text-align:center;font-size:32px;margin-bottom:20px;}
+#search{width:100%;padding:14px;border-radius:14px;border:none;background:#1f1f1f;color:white;font-size:16px;margin-bottom:30px;outline:none;}
+#search:focus{box-shadow:0 0 0 2px #ffb703;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px;}
+.card{background:rgba(255,255,255,0.05);border-radius:18px;overflow:hidden;cursor:pointer;transition:0.3s;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);}
+.card:hover{transform:translateY(-8px);box-shadow:0 15px 40px rgba(0,0,0,0.5);}
+.card img{width:100%;height:230px;object-fit:cover;}
+.card-content{padding:15px;}
+.card h3{margin:0 0 8px;font-size:18px;color:#ffb703;}
+.ingredients{font-size:14px;color:#ccc;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;justify-content:center;align-items:center;opacity:0;visibility:hidden;transition:0.3s;padding:20px;}
+.modal.active{opacity:1;visibility:visible;}
+.modal-box{background:#181818;width:100%;max-width:600px;border-radius:20px;overflow:hidden;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-box img{width:100%;height:300px;object-fit:cover;}
+.modal-body{padding:20px;}
+.modal-body h2{margin-top:0;color:#ffb703;}
+.modal-body ul{padding-left:18px;}
+.close{position:absolute;top:25px;right:35px;font-size:28px;cursor:pointer;}
+.loading{text-align:center;margin-top:40px;font-size:18px;color:#aaa;}
+</style>
 </head>
 <body>
 
-<div class="container" id="content">
-    <p>Načítavam cocktail...</p>
+<h1>Booze Cocktails 🍹</h1>
+<input type="text" id="search" placeholder="Hľadaj drink alebo ingredienciu...">
+<div class="loading" id="loading">Načítavam drinky...</div>
+<div class="grid" id="cocktailGrid"></div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+    <div class="close" onclick="closeModal()">✕</div>
+    <div class="modal-box" id="modalBox"></div>
 </div>
 
 <script>
-const URL = "https://boozeapi.com/api/v1/cocktails";
+const grid=document.getElementById("cocktailGrid");
+const search=document.getElementById("search");
+const loading=document.getElementById("loading");
+const modal=document.getElementById("modal");
+const modalBox=document.getElementById("modalBox");
+let cocktails=[];
 
-function getIdFromURL() {
-    const params = new URLSearchParams(window.location.search);
-    return parseInt(params.get("id"));
+async function loadCocktails(){
+    try{
+        const res=await fetch("cocktails.json"); // musí byť v rovnakej zložke
+        cocktails=await res.json();
+        loading.style.display="none";
+        renderCocktails(cocktails);
+    }catch(err){
+        loading.innerText="Chyba pri načítaní 😢";
+        console.error(err);
+    }
 }
 
-async function loadDetail() {
-    const id = getIdFromURL();
-    const container = document.getElementById("content");
-
-    if (!id) {
-        container.innerHTML = "<h1>❌ Neplatné ID</h1>";
-        return;
-    }
-
-    try {
-        const response = await fetch(URL);
-        const data = await response.json();
-        const cocktails = data.data || data;
-
-        const cocktail = cocktails.find(c => c.id === id);
-
-        if (!cocktail) {
-            container.innerHTML = "<h1>404 - Cocktail nenájdený 😢</h1>";
-            return;
-        }
-
-        document.title = cocktail.name;
-
-        container.innerHTML = `
-            <a href="index.html" class="back-link">⬅ Späť na cocktails</a>
-
-            <h1>${cocktail.name}</h1>
-
-            <img src="${cocktail.image || 'https://via.placeholder.com/400x400'}">
-
-            <h2>🧾 Ingrediencie</h2>
-            <ul>
-                ${cocktail.ingredients.map(ing =>
-                    `<li>${ing.measurement || ""} ${ing.name}</li>`
-                ).join("")}
-            </ul>
-
-            <h2>🍹 Postup</h2>
-            <p>
-                ${cocktail.instructions || "Postup nie je dostupný 😢"}
-            </p>
-
-            ${cocktail.glass ? `
-                <h3>🥂 Pohár</h3>
-                <p>${cocktail.glass}</p>
-            ` : ""}
+function renderCocktails(list){
+    grid.innerHTML="";
+    list.forEach(drink=>{
+        const card=document.createElement("div");
+        card.className="card";
+        const ingredients=drink.ingredients ? drink.ingredients.map(i=>i.name).join(", ") : "Neznáme ingrediencie";
+        card.innerHTML=`
+            <img src="${drink.image}" alt="${drink.name}">
+            <div class="card-content">
+                <h3>${drink.name}</h3>
+                <div class="ingredients">${ingredients}</div>
+            </div>
         `;
-
-    } catch (error) {
-        container.innerHTML = "<h1>❌ Chyba pri načítaní dát</h1>";
-        console.error(error);
-    }
+        card.onclick=()=>openModal(drink);
+        grid.appendChild(card);
+    });
 }
 
-loadDetail();
+function openModal(drink){
+    const ingredients=drink.ingredients
+        ? drink.ingredients.map(i=>`<li>${i.name}${i.amount? " - "+i.amount:""}</li>`).join("")
+        : "<li>Neznáme ingrediencie</li>";
+    modalBox.innerHTML=`
+        <img src="${drink.image}" alt="${drink.name}">
+        <div class="modal-body">
+            <h2>${drink.name}</h2>
+            <h4>Ingrediencie:</h4>
+            <ul>${ingredients}</ul>
+            ${drink.instructions? `<h4>Postup:</h4><p>${drink.instructions}</p>` : ""}
+        </div>
+    `;
+    modal.classList.add("active");
+}
+
+function closeModal(){ modal.classList.remove("active"); }
+
+search.addEventListener("input",()=>{
+    const value=search.value.toLowerCase();
+    const filtered=cocktails.filter(drink=>{
+        const nameMatch=drink.name.toLowerCase().includes(value);
+        const ingredientMatch=drink.ingredients
+            ? drink.ingredients.some(i=>i.name.toLowerCase().includes(value))
+            : false;
+        return nameMatch||ingredientMatch;
+    });
+    renderCocktails(filtered);
+});
+
+modal.addEventListener("click",e=>{ if(e.target===modal) closeModal(); });
+
+loadCocktails();
 </script>
 
 </body>
