@@ -2,7 +2,7 @@
 <html lang="sk">
 <head>
     <meta charset="UTF-8">
-    <title>{{ cocktail.name }}</title>
+    <title>Detail Cocktailu</title>
 
     <style>
         body {
@@ -17,18 +17,14 @@
             margin: auto;
         }
 
-        /* 🔙 BACK LINK */
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
-
             font-size: 16px;
             font-weight: 600;
             letter-spacing: 0.3px;
-
             color: #ffb703;
             text-decoration: none;
-
             transition: color 0.2s, transform 0.2s;
         }
 
@@ -64,32 +60,74 @@
 </head>
 <body>
 
-<div class="container">
-
-    <a href="/" class="back-link">⬅ Späť na cocktails</a>
-
-    <h1>{{ cocktail.name }}</h1>
-
-    <img src="{{ cocktail.image or 'https://via.placeholder.com/400x400' }}">
-
-    <h2>🧾 Ingrediencie</h2>
-    <ul>
-        {% for ing in cocktail.ingredients %}
-        <li>{{ ing.measurement or "" }} {{ ing.name }}</li>
-        {% endfor %}
-    </ul>
-
-    <h2>🍹 Postup</h2>
-    <p>
-        {{ cocktail.instructions or "Postup nie je dostupný 😢" }}
-    </p>
-
-    {% if cocktail.glass %}
-    <h3>🥂 Pohár</h3>
-    <p>{{ cocktail.glass }}</p>
-    {% endif %}
-
+<div class="container" id="content">
+    <p>Načítavam cocktail...</p>
 </div>
+
+<script>
+const URL = "https://boozeapi.com/api/v1/cocktails";
+
+function getIdFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    return parseInt(params.get("id"));
+}
+
+async function loadDetail() {
+    const id = getIdFromURL();
+    const container = document.getElementById("content");
+
+    if (!id) {
+        container.innerHTML = "<h1>❌ Neplatné ID</h1>";
+        return;
+    }
+
+    try {
+        const response = await fetch(URL);
+        const data = await response.json();
+        const cocktails = data.data || data;
+
+        const cocktail = cocktails.find(c => c.id === id);
+
+        if (!cocktail) {
+            container.innerHTML = "<h1>404 - Cocktail nenájdený 😢</h1>";
+            return;
+        }
+
+        document.title = cocktail.name;
+
+        container.innerHTML = `
+            <a href="index.html" class="back-link">⬅ Späť na cocktails</a>
+
+            <h1>${cocktail.name}</h1>
+
+            <img src="${cocktail.image || 'https://via.placeholder.com/400x400'}">
+
+            <h2>🧾 Ingrediencie</h2>
+            <ul>
+                ${cocktail.ingredients.map(ing =>
+                    `<li>${ing.measurement || ""} ${ing.name}</li>`
+                ).join("")}
+            </ul>
+
+            <h2>🍹 Postup</h2>
+            <p>
+                ${cocktail.instructions || "Postup nie je dostupný 😢"}
+            </p>
+
+            ${cocktail.glass ? `
+                <h3>🥂 Pohár</h3>
+                <p>${cocktail.glass}</p>
+            ` : ""}
+        `;
+
+    } catch (error) {
+        container.innerHTML = "<h1>❌ Chyba pri načítaní dát</h1>";
+        console.error(error);
+    }
+}
+
+loadDetail();
+</script>
 
 </body>
 </html>
