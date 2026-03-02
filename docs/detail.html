@@ -53,19 +53,16 @@ let cocktails=[];
 async function loadCocktails(){
     try{
         const res = await fetch("./cocktails.json");
+        const json = await res.json();
 
-        if(!res.ok){
-            throw new Error("HTTP error: " + res.status);
-        }
-
-        const data = await res.json();
-        cocktails = Array.isArray(data.data) ? data.data : [];
+        cocktails = json.data; // ← berieme pole z data
 
         loading.style.display="none";
         renderCocktails(cocktails);
+
     }catch(err){
         loading.innerText="Chyba pri načítaní 😢";
-        console.error("DETAIL CHYBY:", err);
+        console.error(err);
     }
 }
 
