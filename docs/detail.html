@@ -53,29 +53,48 @@ let cocktails=[];
 async function loadCocktails(){
     try{
         const res = await fetch("./cocktails.json");
+
+        if(!res.ok){
+            throw new Error("HTTP error " + res.status);
+        }
+
         const json = await res.json();
 
-        cocktails = json.data; // ← berieme pole z data
+        console.log("Načítané JSON:", json);
+
+        // bezpečné získanie poľa
+        if(Array.isArray(json)){
+            cocktails = json;
+        } else if(Array.isArray(json.data)){
+            cocktails = json.data;
+        } else {
+            throw new Error("JSON nemá pole data");
+        }
 
         loading.style.display="none";
         renderCocktails(cocktails);
 
     }catch(err){
         loading.innerText="Chyba pri načítaní 😢";
-        console.error(err);
+        console.error("DETAIL CHYBY:", err);
     }
 }
 
 function renderCocktails(list){
-    if(!Array.isArray(list)) return;
+
+    if(!Array.isArray(list)){
+        console.error("renderCocktails nedostal pole:", list);
+        return;
+    }
 
     grid.innerHTML="";
+
     list.forEach(drink=>{
         const card=document.createElement("div");
         card.className="card";
 
-        const ingredients=drink.ingredients 
-            ? drink.ingredients.map(i=>i.name).join(", ") 
+        const ingredients=Array.isArray(drink.ingredients)
+            ? drink.ingredients.map(i=>i.name).join(", ")
             : "Neznáme ingrediencie";
 
         card.innerHTML=`
@@ -92,7 +111,7 @@ function renderCocktails(list){
 }
 
 function openModal(drink){
-    const ingredients=drink.ingredients
+    const ingredients=Array.isArray(drink.ingredients)
         ? drink.ingredients.map(i=>`<li>${i.name}</li>`).join("")
         : "<li>Neznáme ingrediencie</li>";
 
@@ -117,10 +136,11 @@ search.addEventListener("input",()=>{
     const value=search.value.toLowerCase();
 
     const filtered=cocktails.filter(drink=>{
-        const nameMatch=drink.name.toLowerCase().includes(value);
-        const ingredientMatch=drink.ingredients
-            ? drink.ingredients.some(i=>i.name.toLowerCase().includes(value))
+        const nameMatch=drink.name?.toLowerCase().includes(value);
+        const ingredientMatch=Array.isArray(drink.ingredients)
+            ? drink.ingredients.some(i=>i.name?.toLowerCase().includes(value))
             : false;
+
         return nameMatch||ingredientMatch;
     });
 
