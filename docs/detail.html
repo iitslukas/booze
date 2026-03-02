@@ -52,8 +52,11 @@ let cocktails=[];
 
 async function loadCocktails(){
     try{
-        const res=await fetch("cocktails.json"); // musí byť v rovnakej zložke
-        cocktails=await res.json();
+        const res = await fetch("cocktails.json");
+        const data = await res.json();
+
+        cocktails = Array.isArray(data.data) ? data.data : [];
+
         loading.style.display="none";
         renderCocktails(cocktails);
     }catch(err){
@@ -63,11 +66,17 @@ async function loadCocktails(){
 }
 
 function renderCocktails(list){
+    if(!Array.isArray(list)) return;
+
     grid.innerHTML="";
     list.forEach(drink=>{
         const card=document.createElement("div");
         card.className="card";
-        const ingredients=drink.ingredients ? drink.ingredients.map(i=>i.name).join(", ") : "Neznáme ingrediencie";
+
+        const ingredients=drink.ingredients 
+            ? drink.ingredients.map(i=>i.name).join(", ") 
+            : "Neznáme ingrediencie";
+
         card.innerHTML=`
             <img src="${drink.image}" alt="${drink.name}">
             <div class="card-content">
@@ -75,6 +84,7 @@ function renderCocktails(list){
                 <div class="ingredients">${ingredients}</div>
             </div>
         `;
+
         card.onclick=()=>openModal(drink);
         grid.appendChild(card);
     });
@@ -82,24 +92,29 @@ function renderCocktails(list){
 
 function openModal(drink){
     const ingredients=drink.ingredients
-        ? drink.ingredients.map(i=>`<li>${i.name}${i.amount? " - "+i.amount:""}</li>`).join("")
+        ? drink.ingredients.map(i=>`<li>${i.name}</li>`).join("")
         : "<li>Neznáme ingrediencie</li>";
+
     modalBox.innerHTML=`
         <img src="${drink.image}" alt="${drink.name}">
         <div class="modal-body">
             <h2>${drink.name}</h2>
             <h4>Ingrediencie:</h4>
             <ul>${ingredients}</ul>
-            ${drink.instructions? `<h4>Postup:</h4><p>${drink.instructions}</p>` : ""}
+            ${drink.instructions ? `<h4>Postup:</h4><p>${drink.instructions}</p>` : ""}
         </div>
     `;
+
     modal.classList.add("active");
 }
 
-function closeModal(){ modal.classList.remove("active"); }
+function closeModal(){ 
+    modal.classList.remove("active"); 
+}
 
 search.addEventListener("input",()=>{
     const value=search.value.toLowerCase();
+
     const filtered=cocktails.filter(drink=>{
         const nameMatch=drink.name.toLowerCase().includes(value);
         const ingredientMatch=drink.ingredients
@@ -107,10 +122,13 @@ search.addEventListener("input",()=>{
             : false;
         return nameMatch||ingredientMatch;
     });
+
     renderCocktails(filtered);
 });
 
-modal.addEventListener("click",e=>{ if(e.target===modal) closeModal(); });
+modal.addEventListener("click",e=>{ 
+    if(e.target===modal) closeModal(); 
+});
 
 loadCocktails();
 </script>
