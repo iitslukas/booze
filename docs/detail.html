@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ cocktail.name }}</title>
+
+    <style>
+        body {
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #121212;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        /* 🔙 BACK LINK */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+
+            color: #ffb703;
+            text-decoration: none;
+
+            transition: color 0.2s, transform 0.2s;
+        }
+
+        .back-link:hover {
+            color: #ffd166;
+            transform: translateX(-4px);
+        }
+
+        img {
+            max-width: 400px;
+            width: 100%;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        h2, h3 {
+            margin-top: 30px;
+        }
+
+        ul {
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+
+        p {
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <a href="/" class="back-link">⬅ Späť na cocktails</a>
+
+    <h1>{{ cocktail.name }}</h1>
+
+    <img src="{{ cocktail.image or 'https://via.placeholder.com/400x400' }}">
+
+    <h2>🧾 Ingrediencie</h2>
+    <ul>
+        {% for ing in cocktail.ingredients %}
+        <li>{{ ing.measurement or "" }} {{ ing.name }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>🍹 Postup</h2>
+    <p>
+        {{ cocktail.instructions or "Postup nie je dostupný 😢" }}
+    </p>
+
+    {% if cocktail.glass %}
+    <h3>🥂 Pohár</h3>
+    <p>{{ cocktail.glass }}</p>
+    {% endif %}
+
+</div>
+
+</body>
+</html>
