@@ -6,17 +6,20 @@
 <title>Booze Cocktails 🍸</title>
 
 <style>
+*{
+    box-sizing:border-box;
+}
+
 body{
     margin:0;
     font-family:system-ui,-apple-system,Segoe UI,Roboto;
-    background:linear-gradient(135deg,#0f0f0f,#1c1c1c);
+    background:linear-gradient(135deg,#0f0f0f,#1b1b1b);
     color:white;
     padding:20px;
 }
 
 h1{
     text-align:center;
-    font-weight:700;
     font-size:32px;
     margin-bottom:20px;
 }
@@ -24,12 +27,17 @@ h1{
 #search{
     width:100%;
     padding:14px;
-    border-radius:12px;
+    border-radius:14px;
     border:none;
     background:#1f1f1f;
     color:white;
     font-size:16px;
-    margin-bottom:25px;
+    margin-bottom:30px;
+    outline:none;
+}
+
+#search:focus{
+    box-shadow:0 0 0 2px #ffb703;
 }
 
 .grid{
@@ -40,17 +48,17 @@ h1{
 
 .card{
     background:rgba(255,255,255,0.05);
-    backdrop-filter:blur(12px);
-    border-radius:16px;
+    border-radius:18px;
     overflow:hidden;
     cursor:pointer;
-    transition:0.25s;
-    border:1px solid rgba(255,255,255,0.05);
+    transition:0.3s;
+    backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.08);
 }
 
 .card:hover{
-    transform:translateY(-6px);
-    box-shadow:0 15px 35px rgba(0,0,0,0.5);
+    transform:translateY(-8px);
+    box-shadow:0 15px 40px rgba(0,0,0,0.5);
 }
 
 .card img{
@@ -74,40 +82,41 @@ h1{
     color:#ccc;
 }
 
-/* MODAL */
+/* MODAL FULLSCREEN */
+
 .modal{
     position:fixed;
     inset:0;
-    background:rgba(0,0,0,0.75);
+    background:rgba(0,0,0,0.85);
     display:flex;
-    align-items:center;
     justify-content:center;
-    visibility:hidden;
+    align-items:center;
     opacity:0;
+    visibility:hidden;
     transition:0.3s;
     padding:20px;
 }
 
 .modal.active{
-    visibility:visible;
     opacity:1;
+    visibility:visible;
 }
 
-.modal-content{
-    background:#1c1c1c;
-    max-width:500px;
+.modal-box{
+    background:#181818;
     width:100%;
+    max-width:600px;
     border-radius:20px;
     overflow:hidden;
-    animation:scaleIn 0.3s ease;
+    animation:fadeIn 0.3s ease;
 }
 
-@keyframes scaleIn{
-    from{transform:scale(0.8);opacity:0}
+@keyframes fadeIn{
+    from{transform:scale(0.85);opacity:0}
     to{transform:scale(1);opacity:1}
 }
 
-.modal img{
+.modal-box img{
     width:100%;
     height:300px;
     object-fit:cover;
@@ -120,6 +129,10 @@ h1{
 .modal-body h2{
     margin-top:0;
     color:#ffb703;
+}
+
+.modal-body ul{
+    padding-left:18px;
 }
 
 .close{
@@ -151,29 +164,27 @@ h1{
 <!-- MODAL -->
 <div class="modal" id="modal">
     <div class="close" onclick="closeModal()">✕</div>
-    <div class="modal-content" id="modalContent"></div>
+    <div class="modal-box" id="modalBox"></div>
 </div>
 
 <script>
-const grid = document.getElementById("cocktailGrid");
-const search = document.getElementById("search");
-const loading = document.getElementById("loading");
-const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
+const grid=document.getElementById("cocktailGrid");
+const search=document.getElementById("search");
+const loading=document.getElementById("loading");
+const modal=document.getElementById("modal");
+const modalBox=document.getElementById("modalBox");
 
-let cocktails = [];
+let cocktails=[];
 
-// 🔥 NAČÍTANIE API (CORS FIX)
+/* FETCH + CORS FIX */
 async function loadCocktails(){
     try{
-        const response = await fetch("https://corsproxy.io/?https://boozeapi.com/api/v1/cocktails");
-        const data = await response.json();
+        const res=await fetch("https://corsproxy.io/?https://boozeapi.com/api/v1/cocktails");
+        const data=await res.json();
 
-        cocktails = Array.isArray(data) ? data : data.data || [];
-
+        cocktails=Array.isArray(data)?data:data.data||[];
         loading.style.display="none";
         renderCocktails(cocktails);
-
     }catch(err){
         loading.innerText="Chyba pri načítaní 😢";
         console.error(err);
@@ -187,8 +198,8 @@ function renderCocktails(list){
         const card=document.createElement("div");
         card.className="card";
 
-        const ingredients = drink.ingredients
-            ? drink.ingredients.map(i=> i.name + (i.amount ? " ("+i.amount+")":"")).join(", ")
+        const ingredients=drink.ingredients
+            ? drink.ingredients.map(i=>i.name).join(", ")
             : "Neznáme ingrediencie";
 
         card.innerHTML=`
@@ -205,17 +216,17 @@ function renderCocktails(list){
 }
 
 function openModal(drink){
-    const ingredients = drink.ingredients
-        ? drink.ingredients.map(i=>`<li>${i.name} ${i.amount ? "- "+i.amount : ""}</li>`).join("")
+    const ingredients=drink.ingredients
+        ? drink.ingredients.map(i=>`<li>${i.name} ${i.amount? "- "+i.amount:""}</li>`).join("")
         : "<li>Neznáme ingrediencie</li>";
 
-    modalContent.innerHTML=`
+    modalBox.innerHTML=`
         <img src="${drink.image}" alt="${drink.name}">
         <div class="modal-body">
             <h2>${drink.name}</h2>
             <h4>Ingrediencie:</h4>
             <ul>${ingredients}</ul>
-            ${drink.instructions ? `<h4>Postup:</h4><p>${drink.instructions}</p>`:""}
+            ${drink.instructions?`<h4>Postup:</h4><p>${drink.instructions}</p>`:""}
         </div>
     `;
 
@@ -230,13 +241,11 @@ search.addEventListener("input",()=>{
     const value=search.value.toLowerCase();
 
     const filtered=cocktails.filter(drink=>{
-        const nameMatch = drink.name.toLowerCase().includes(value);
-
-        const ingredientMatch = drink.ingredients
+        const nameMatch=drink.name.toLowerCase().includes(value);
+        const ingredientMatch=drink.ingredients
             ? drink.ingredients.some(i=>i.name.toLowerCase().includes(value))
             : false;
-
-        return nameMatch || ingredientMatch;
+        return nameMatch||ingredientMatch;
     });
 
     renderCocktails(filtered);
